@@ -1,16 +1,34 @@
 <?php
 session_start();
+include 'db_config.php'; // データベース接続
+
+// メッセージ初期化
+$error = '';
 
 // ログイン処理
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    // ユーザ名とパスワードの確認
-    if ($username === 'admin' && $password === '1234') {
-        // セッションにログイン状態を保存
+    // データベースからユーザーを検索
+    $stmt = $conn->prepare("SELECT username, password, role FROM users WHERE username = ? AND password = ?");
+    $stmt->bind_param("ss", $username, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 1) {
+        // ユーザーが見つかった場合
+        $user = $result->fetch_assoc();
         $_SESSION['loggedin'] = true;
-        header('Location: admin_dashboard.php'); // 管理画面にリダイレクト
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+
+        // ロールに応じてリダイレクト
+        if ($user['role'] === 'admin') {
+            header("Location: dashboard.php");
+        } elseif ($user['role'] === 'user') {
+            header("Location: user_dashboard.php");
+        }
         exit;
     } else {
         $error = 'ユーザ名またはパスワードが間違っています。';
@@ -27,7 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <h1>ログイン</h1>
-    <?php if (!empty($error)): ?>
+    <?php if ($error): ?>
         <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
-    <form
+    <form method="POST" action="">
+        <label for="username">ユーザ名:</label>
+        <input type="text" name="username" id="username" required>
+        <br>
+        <label for="password">パスワード:</label>
+        <input type="password" name="password" id="password" required>
+        <br>
+        <button type="submit">ログイン</button>
+    </form>
+</body>
+</html>
