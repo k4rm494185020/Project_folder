@@ -25,22 +25,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8">    
+    <link rel="stylesheet" href="styles.css">
     <title>新着情報管理</title>
 </head>
 <body>
+    <div class="admin-news">
     <h2>新着情報管理</h2>
     <form method="post">
         <label>タイトル:</label><input type="text" name="title" required><br>
         <label>内容:</label><textarea name="content" required></textarea><br>
         <button type="submit" name="add_news">追加</button>
     </form>
-    <h3>既存の新着情報</h3>
+    <h3>新着情報</h3>
     <?php
     $result = $conn->query("SELECT * FROM news");
     while ($row = $result->fetch_assoc()) {
         echo "<p>{$row['title']} <form style='display:inline;' method='post'><input type='hidden' name='id' value='{$row['id']}'><button type='submit' name='delete_news'>削除</button></form></p>";
     }
     ?>
+    </div>
 </body>
 </html>
